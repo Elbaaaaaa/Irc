@@ -17,6 +17,11 @@
 #include <map>
 #include <poll.h>
 #include <string>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <stdexcept>
 
 #include "Client.hpp"
 #include "Channel.hpp"
