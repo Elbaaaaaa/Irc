@@ -25,14 +25,20 @@ private :
     std::string _topic;
     std::map<int, Client*> _members;
     std::map<int, Client*> _operators;
+    std::map<int, Client*> _invited;
     bool _i;
     bool _t;
-    std::string _k;
+    bool _k;
+    std::string _key;
     bool _l;
     int _limitValue;
 
 
 public :
+
+    Channel(std::string const& name, std::string const& topic);
+    ~Channel();
+
 
     void AddMember(int fd, Client* client);
     void RemoveMember(int fd);
@@ -43,14 +49,16 @@ public :
     void RemoveOp(int fd);
     bool CheckOp(int fd);
 
+    void AddInvited(int fd, Client* client);
+    void RemoveInvited(int fd);
+    bool CheckInvited(int fd);
+
     const std::map<int, Client*> &GetMapMember() const;
     const std::map<int, Client*> &GetMapOp() const;
+    const std::map<int, Client*> &GetMapInvited() const;
     std::string GetName() const;
     std::string GetTopic() const;
     void SetTopic(std::string const& topic);
-
-    Channel(std::string const& name, std::string const& topic);
-    ~Channel();
     
     void SetModei(bool state);
     void SetModet(bool state);
@@ -60,8 +68,11 @@ public :
     bool GetModei() const;
     bool GetModet() const;
     bool GetModel() const;
+    bool GetModek() const;
     int GetLimitValue() const;
     std::string const& Getkey() const;
+    
+    void broadcast(const std::string& msg, int except_fd = -1);
 
 
 };
