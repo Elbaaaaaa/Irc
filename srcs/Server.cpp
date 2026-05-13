@@ -123,6 +123,20 @@ void Server::handleCommand(int fd, IrcMessage& message)
 {
 }
 
+/* Send a message to a client */
 void Server::sendToClient(int fd, const std::string& message)
 {
+    if (fd < 0 || message.empty())
+        return;
+
+    std::string full_message = message + "\r\n";
+
+    size_t total_sent = 0;
+    while (total_sent < full_message.length())
+    {
+        ssize_t res = send(fd, full_message.c_str() + total_sent, full_message.length() - total_sent, 0);
+        if (res <= 0)
+            return;
+        total_sent += res;
+    }
 }

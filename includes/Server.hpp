@@ -52,7 +52,6 @@ class Server
         void removeClient(int fd);
         void writeToClient(int fd);
         void handleCommand(int fd, IrcMessage& message);
-        void sendToClient(int fd, std::string message);
 
     public:
 
