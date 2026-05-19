@@ -2,8 +2,10 @@ NAME = ircserv
 
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+CPPFLAGS = -Iincludes
 
-SRCS = main.cpp Server.cpp Client.cpp Channel.cpp Parser.cpp Dispatcher.cpp Commands_connection.cpp Commands_messages.cpp Commands_channel.cpp Commands_mode.cpp
+SRCS = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp srcs/Channel.cpp srcs/Parser.cpp srcs/Dispatcher.cpp \
+	srcs/Commands_connection.cpp srcs/Commands_messages.cpp srcs/Commands_channel.cpp srcs/Commands_mode.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
@@ -21,3 +23,8 @@ fclean: clean
 re: fclean all
 
 .PHONY: all clean fclean re
+
+.PHONY: parser_test
+parser_test:
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) test_parser.cpp srcs/Parser.cpp -o test_parser
+	./test_parser
