@@ -84,3 +84,84 @@ void Server::JOIN(int fd, IrcMessage& message)
     sendToClient(fd, ":server 353 " + client->getNick() + " = " + channelName + " :" + namesList + "\r\n");
     sendToClient(fd, ":server 366 " + client->getNick() + " " + channelName + " :End of /NAMES list\r\n");
 }
+
+
+//PART c'est quitter un channel.
+// Ce qu'il doit faire :
+
+// Vérifier qu'un channel est fourni en paramètre (461)
+// Vérifier que le channel existe (403)
+// Vérifier que le client est bien membre du channel (442)
+// Broadcaster le message PART à tout le channel (y compris le client qui part)
+// Retirer le client du channel avec RemoveMember
+// Si le channel est vide après → le supprimer avec removeChannel
+
+// Le message PART broadcasted ressemble à :
+// :nick!user@host PART #channel :raison
+// La raison est optionnelle — c'est message.params[1] si elle existe.
+
+
+
+
+
+
+
+// KICK c'est expulser un autre client du channel.
+// Ce qu'il doit faire :
+
+// Vérifier qu'un channel et un nick cible sont fournis en paramètre (461)
+// Vérifier que le channel existe (403)
+// Vérifier que le client qui kick est bien membre du channel (442)
+// Vérifier que le client qui kick est opérateur (482)
+// Vérifier que la cible est bien membre du channel (441)
+// Broadcaster le message KICK à tout le channel
+// Retirer la cible du channel avec RemoveMember
+// Si le channel est vide après → le supprimer avec removeChannel
+
+// Le message KICK broadcasted ressemble à :
+// :nick!user@host KICK #channel cible :raison
+// La raison est optionnelle — c'est message.params[2] si elle existe.
+
+
+
+
+
+
+
+// TOPIC c'est voir ou changer le topic d'un channel.
+
+// Vérifier qu'un channel est fourni (461)
+// Vérifier que le channel existe (403)
+// Vérifier que le client est membre du channel (442)
+// Si pas de deuxième paramètre → juste afficher le topic actuel (332) ou (331) si vide
+// Si deuxième paramètre → c'est un changement de topic :
+
+// Vérifier que le mode +t est off OU que le client est opérateur (482)
+// Changer le topic avec SetTopic
+// Broadcaster le nouveau topic à tout le channel
+
+// Le message broadcasted ressemble à :
+// :nick!user@host TOPIC #channel :nouveau topic
+
+
+
+
+
+
+
+
+
+// INVITE c'est inviter quelqu'un dans un channel.
+
+// Vérifier qu'un nick et un channel sont fournis (461)
+// Vérifier que le channel existe (403)
+// Vérifier que le client qui invite est membre du channel (442)
+// Vérifier que le client qui invite est opérateur (482)
+// Vérifier que la cible existe avec getClientByNick (401)
+// Vérifier que la cible n'est pas déjà dans le channel (443)
+// Ajouter la cible dans _invited avec AddInvited
+// Envoyer le 341 au client qui invite
+// Envoyer le message INVITE à la cible
+
+// Le message envoyé à la cible ressemble à :
+// :nick!user@host INVITE cible #channel
