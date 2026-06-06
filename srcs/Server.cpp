@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ebella <ebella@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ntamacha <ntamacha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/11 21:19:52 by ebella            #+#    #+#             */
-/*   Updated: 2026/05/11 21:19:52 by ebella           ###   ########.fr       */
+/*   Updated: 2026/06/06 16:58:33 by ntamacha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,10 +105,15 @@ void Server::disconnectClient(int fd)
 
 void Server::createChannel(const std::string& name, Client& op)
 {
+    
 }
 
 void Server::sendToClient(int fd, const std::string& message)
 {
+    Channel* channel = new Channel(name, "");
+    channel->AddMember(op.getFd(), &op);
+    channel->AddOp(op.getFd(), &op);
+    _channels[name] = channel;
 }
 
 void Server::removeClientFromAllChannels(Client& client)
