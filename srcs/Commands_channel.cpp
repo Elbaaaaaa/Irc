@@ -9,6 +9,8 @@
 /*   Updated: 2026/05/19 20:07:34 by ntamacha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+#include "../includes/Server.hpp"
+#include "../includes/Channel.hpp"
 
 void Server::JOIN(int fd, IrcMessage& message)
 {
@@ -86,26 +88,96 @@ void Server::JOIN(int fd, IrcMessage& message)
 }
 
 
-//PART c'est quitter un channel.
-// Ce qu'il doit faire :
+void Server::PART(int fd, IrcMessage& message)
+{
+    Client* client = getClientByFd(fd);
+    if (!client)
+        return;
 
-// Vérifier qu'un channel est fourni en paramètre (461)
-// Vérifier que le channel existe (403)
-// Vérifier que le client est bien membre du channel (442)
-// Broadcaster le message PART à tout le channel (y compris le client qui part)
-// Retirer le client du channel avec RemoveMember
-// Si le channel est vide après → le supprimer avec removeChannel
+    if (message.params.empty())
+    {
+        sendToClient(fd, ":server 461 " + client->getNick() + " PART :Not enough parameters\r\n");
+        return;
+    }
 
-// Le message PART broadcasted ressemble à :
-// :nick!user@host PART #channel :raison
-// La raison est optionnelle — c'est message.params[1] si elle existe.
+    std::string channelName = message.params[0];
 
+    if (channelName[0] != '#')
+    {
+        sendToClient(fd, ":server 403 " + client->getNick() + " " + channelName + " :No such channel\r\n");
+        return;
+    }
+    Channel* channel = getChannel(channelName);
+    if (!channel)
+    {
+        sendToClient(fd, ":server 403 " + client->getNick() + " " + channelName + " :No such channel\r\n");
+        return;
+    }
+    if (!channel->CheckMember(fd))
+    {
+        sendToClient(fd, ERR_NOTONCHANNEL(client->getNick(), channelName));
+        return;
+    }
+    std::string partMsg = ":" + client->getPrefix() + " PART " + channelName + "\r\n";
+    channel->broadcast(partMsg);
+    channel->RemoveMember(fd);
+    if (channel->GetMapMember().size() == 0)
+    {
+        removeChannel(channelName);
+        return ;
+    }
 
+}
 
+void Server::KICK(int fd, IrcMessage& message)
+{
+    Client* client = getClientByFd(fd);
+    if (!client)
+        return;
 
+    if (message.params.empty())
+    {
+        sendToClient(fd, ":server 461 " + client->getNick() + " JOIN :Not enough parameters\r\n");
+        return;
+    }
 
+    std::string channelName = message.params[0];
+    Client* looser = getClientByNick(message.params[1]);
+    if (!looser)
+    {
+        sendToClient(fd, ERR_NOSUCHNICK(client->getNick(), message.params[1]));
+        return;
+    }
+    int looserfd = looser->getFd();
 
+    if (channelName[0] != '#')
+    {
+        sendToClient(fd, ":server 403 " + client->getNick() + " " + channelName + " :No such channel\r\n");
+        return;
+    }
+    Channel* channel = getChannel(channelName);
+    if (!channel)
+    {
+        sendToClient(fd, ":server 403 " + client->getNick() + " " + channelName + " :No such channel\r\n");
+        return;
+    }
+    if (!channel->CheckMember(fd))
+    {
+       sendToClient(fd, ERR_NOTONCHANNEL(client->getNick(), channelName));
+    }
+    if (!channel->CheckOp(fd))
+    {
+       sendToClient(fd, ERR_CHANOPRIVSNEEDED(client->getNick(), channelName));
+    }
+    if (!channel->CheckMember(looserfd))
+    {
+       sendToClient(fd, ERR_USERNOTINCHANNEL(client->getNick(), channelName));
+    }
 
+    std::string kickMsg = ":" + client->getPrefix() + " KICK " + looser->getNick() + " " + channelName + "\r\n";
+    channel->broadcast(kickMsg);
+
+}
 // KICK c'est expulser un autre client du channel.
 // Ce qu'il doit faire :
 
@@ -114,7 +186,7 @@ void Server::JOIN(int fd, IrcMessage& message)
 // Vérifier que le client qui kick est bien membre du channel (442)
 // Vérifier que le client qui kick est opérateur (482)
 // Vérifier que la cible est bien membre du channel (441)
-// Broadcaster le message KICK à tout le channel
+// Broadcaster le message KICK à tout le channel -----------------------
 // Retirer la cible du channel avec RemoveMember
 // Si le channel est vide après → le supprimer avec removeChannel
 
