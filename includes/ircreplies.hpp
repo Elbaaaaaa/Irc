@@ -102,7 +102,7 @@
 
 // 331 - Pas de topic
 # define RPL_NOTOPIC(nick, channel) \
-    (":") + SERVER_NAME + " 331 " + (nick) + " " + (channel) + " :No topic is set\r\n"
+    (":") + SERVER_NAME + " 331 " + (nick) + " " + (channel) + "  channel->GetTopic():No topic is set\r\n"
  
 // 332 - Topic du channel
 # define RPL_TOPIC(nick, channel, topic) \

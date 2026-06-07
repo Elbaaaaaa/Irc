@@ -32,7 +32,7 @@ void Server::JOIN(int fd, IrcMessage& message)
         sendToClient(fd, ":server 403 " + client->getNick() + " " + channelName + " :No such channel\r\n");
         return;
     }
-
+ channel->GetTopic()
     Channel* channel = getChannel(channelName);
     if (!channel)
     {
@@ -56,8 +56,7 @@ void Server::JOIN(int fd, IrcMessage& message)
             return;
         }
 
-        if (channel->GetModel() &&
-            (int)channel->GetMapMember().size() >= channel->GetLimitValue())
+        if (channel->GetModel() && (int)channel->GetMapMember().size() >= channel->GetLimitValue())
         {
             sendToClient(fd, ":server 471 " + client->getNick() + " " + channelName + " :Cannot join channel (+l)\r\n");
             return;
@@ -137,11 +136,17 @@ void Server::KICK(int fd, IrcMessage& message)
 
     if (message.params.empty())
     {
-        sendToClient(fd, ":server 461 " + client->getNick() + " JOIN :Not enough parameters\r\n");
+        sendToClient(fd, ":server 461 " + client->getNick() + " KICK :Not enough parameters\r\n");
         return;
     }
 
     std::string channelName = message.params[0];
+    if (message.params.size() < 2)
+    {
+        sendToClient(fd, ERR_NEEDMOREPARAMS(client->getNick(), channelName));
+        return;
+    }
+    std::string raison = (message.params.size() >= 3) ? message.params[2] : "No reason";
     Client* looser = getClientByNick(message.params[1]);
     if (!looser)
     {
@@ -164,76 +169,140 @@ void Server::KICK(int fd, IrcMessage& message)
     if (!channel->CheckMember(fd))
     {
        sendToClient(fd, ERR_NOTONCHANNEL(client->getNick(), channelName));
+       return;
     }
     if (!channel->CheckOp(fd))
     {
        sendToClient(fd, ERR_CHANOPRIVSNEEDED(client->getNick(), channelName));
+       return;
     }
     if (!channel->CheckMember(looserfd))
     {
-       sendToClient(fd, ERR_USERNOTINCHANNEL(client->getNick(), channelName));
+       sendToClient(fd, ERR_USERNOTINCHANNEL(client->getNick(), looser->getNick(),channelName));
+       return;
     }
 
-    std::string kickMsg = ":" + client->getPrefix() + " KICK " + looser->getNick() + " " + channelName + "\r\n";
+    std::string kickMsg = ":" + client->getPrefix() + " KICK " + channelName + " " + looser->getNick() + " :" + raison + "\r\n";
     channel->broadcast(kickMsg);
 
+    channel->RemoveMember(looserfd);
+
+    if (channel->GetMapMember().size() == 0)
+    {
+        removeChannel(channelName);
+        return ;
+    }
+
 }
-// KICK c'est expulser un autre client du channel.
-// Ce qu'il doit faire :
+ 
 
-// Vérifier qu'un channel et un nick cible sont fournis en paramètre (461)
-// Vérifier que le channel existe (403)
-// Vérifier que le client qui kick est bien membre du channel (442)
-// Vérifier que le client qui kick est opérateur (482)
-// Vérifier que la cible est bien membre du channel (441)
-// Broadcaster le message KICK à tout le channel -----------------------
-// Retirer la cible du channel avec RemoveMember
-// Si le channel est vide après → le supprimer avec removeChannel
+void Server::TOPIC(int fd, IrcMessage& message)
+{
+    Client* client = getClientByFd(fd);
+    if (!client)
+        return;
+    if (message.params.empty())
+    {
+        sendToClient(fd, ":server 461 " + client->getNick() + " TOPIC :Not enough parameters\r\n");
+        return;
+    }
 
-// Le message KICK broadcasted ressemble à :
-// :nick!user@host KICK #channel cible :raison
-// La raison est optionnelle — c'est message.params[2] si elle existe.
+    std::string channelName = message.params[0];
+    if (channelName[0] != '#')
+    {
+        sendToClient(fd, ":server 403 " + client->getNick() + " " + channelName + " :No such channel\r\n");
+        return;
+    }
+
+    Channel* channel = getChannel(channelName);
+
+    if (!channel->CheckMember(fd))
+    {
+        sendToClient(fd, ERR_NOTONCHANNEL(client->getNick(), channelName));
+        return;
+    }
+
+    std::string newtopic = (message.params.size() >= 2) ? message.params[1] : "";
+    if (newtopic.empty())
+    {
+        if (channel->GetTopic().empty())
+        {
+            sendToClient(fd, RPL_NOTOPIC(client->getNick(), channelName));
+            return;
+        }
+        sendToClient(fd, RPL_TOPIC(client->getNick(), channelName, channel->GetTopic()));
+        return ;
+    }
+    if (channel->GetModet() && !channel->CheckOp(fd))
+    {
+        sendToClient(fd, ERR_CHANOPRIVSNEEDED(client->getNick(), channelName));
+        return ;
+    }
+    channel->SetTopic(newtopic);
+
+    std::string topicMsg = ":" + client->getPrefix() + " TOPIC " + channelName +  " :" + newtopic + "\r\n";
+    channel->broadcast(topicMsg);
+
+}
 
 
+void Server::INVITE(int fd, IrcMessage& message)
+{
+    Client* client = getClientByFd(fd);
+    if (!client)
+        return;
 
+    if (message.params.empty())
+    {
+        sendToClient(fd, ":server 461 " + client->getNick() + " INVITE :Not enough parameters\r\n");
+        return;
+    }
 
+    std::string channelName = message.params[0];
+    if (message.params.size() < 2)
+    {
+        sendToClient(fd, ERR_NEEDMOREPARAMS(client->getNick(), channelName));
+        return;
+    }
+    Client* target = getClientByNick(message.params[1]);
+    if (!target)
+    {
+        sendToClient(fd, ERR_NOSUCHNICK(client->getNick(), message.params[1]));
+        return;
+    }
+    int targetfd = target->getFd();
 
+    if (channelName[0] != '#')
+    {
+        sendToClient(fd, ":server 403 " + client->getNick() + " " + channelName + " :No such channel\r\n");
+        return;
+    }
+    Channel* channel = getChannel(channelName);
+    if (!channel)
+    {
+        sendToClient(fd, ":server 403 " + client->getNick() + " " + channelName + " :No such channel\r\n");
+        return;
+    }
+    if (!channel->CheckMember(fd))
+    {
+       sendToClient(fd, ERR_NOTONCHANNEL(client->getNick(), channelName));
+       return;
+    }
+    if (!channel->CheckOp(fd))
+    {
+       sendToClient(fd, ERR_CHANOPRIVSNEEDED(client->getNick(), channelName));
+       return;
+    }
 
+    if (channel->CheckMember(targetfd))
+    {
+       sendToClient(fd, ERR_USERONCHANNEL(client->getNick(), target->getNick(), channelName));
+       return;
+    }
 
-// TOPIC c'est voir ou changer le topic d'un channel.
+    channel->AddInvited(targetfd, target);
+    sendToClient(fd, RPL_INVITING(client->getNick(), target->getNick(), channelName));
 
-// Vérifier qu'un channel est fourni (461)
-// Vérifier que le channel existe (403)
-// Vérifier que le client est membre du channel (442)
-// Si pas de deuxième paramètre → juste afficher le topic actuel (332) ou (331) si vide
-// Si deuxième paramètre → c'est un changement de topic :
-
-// Vérifier que le mode +t est off OU que le client est opérateur (482)
-// Changer le topic avec SetTopic
-// Broadcaster le nouveau topic à tout le channel
-
-// Le message broadcasted ressemble à :
-// :nick!user@host TOPIC #channel :nouveau topic
-
-
-
-
-
-
-
-
-
-// INVITE c'est inviter quelqu'un dans un channel.
-
-// Vérifier qu'un nick et un channel sont fournis (461)
-// Vérifier que le channel existe (403)
-// Vérifier que le client qui invite est membre du channel (442)
-// Vérifier que le client qui invite est opérateur (482)
-// Vérifier que la cible existe avec getClientByNick (401)
-// Vérifier que la cible n'est pas déjà dans le channel (443)
-// Ajouter la cible dans _invited avec AddInvited
-// Envoyer le 341 au client qui invite
-// Envoyer le message INVITE à la cible
-
-// Le message envoyé à la cible ressemble à :
-// :nick!user@host INVITE cible #channel
+    std::string inviteMsg = ":" + client->getPrefix() + " INVITE " + target->getNick() + " " + channelName + "\r\n";
+    sendToClient(targetfd, inviteMsg);
+}
