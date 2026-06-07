@@ -32,7 +32,7 @@ void Server::JOIN(int fd, IrcMessage& message)
         sendToClient(fd, ":server 403 " + client->getNick() + " " + channelName + " :No such channel\r\n");
         return;
     }
- channel->GetTopic()
+    channel->GetTopic()
     Channel* channel = getChannel(channelName);
     if (!channel)
     {
