@@ -9,4 +9,10 @@
 /*   Updated: 2026/05/19 20:07:37 by ntamacha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+#include "../includes/Server.hpp"
+#include "../includes/Channel.hpp"
 
+void Server::MODE(int fd, IrcMessage& message)
+{
+
+}

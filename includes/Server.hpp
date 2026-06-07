@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ebella <ebella@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ntamacha <ntamacha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/10 15:26:38 by ebella            #+#    #+#             */
-/*   Updated: 2026/05/10 15:26:38 by ebella           ###   ########.fr       */
+/*   Updated: 2026/06/07 19:29:57 by ntamacha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,13 @@ class Server
         void removeClient(int fd);
         void writeToClient(int fd);
         void handleCommand(int fd, IrcMessage& message);
+
+        void JOIN(int fd, IrcMessage& message);
+        void KICK(int fd, IrcMessage& message);
+        void PART(int fd, IrcMessage& message);
+        void INVITE(int fd, IrcMessage& message);
+        void TOPIC(int fd, IrcMessage& message);
+        void MODE(int fd, IrcMessage& message);
 
     public:
 
