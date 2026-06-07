@@ -14,5 +14,7 @@
 
 void Server::MODE(int fd, IrcMessage& message)
 {
-
+    Client* client = getClientByFd(fd);
+    if (!client)
+        return;
 }
