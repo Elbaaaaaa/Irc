@@ -84,7 +84,7 @@
     (":") + SERVER_NAME + " 471 " + (nick) + " " + (channel) + " :Cannot join channel (+l)\r\n"
  
 // 472 - Mode inconnu
-# define E \
+# define ERR_UNKNOWNMODE \
     (":") + SERVER_NAME + " 472 " + (nick) + " " + (c) + " :is unknown mode char to me\r\n"
  
 // 473 - Channel invite only (+i)
