@@ -6,7 +6,7 @@
 /*   By: ntamacha <ntamacha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/11 21:19:52 by ebella            #+#    #+#             */
-/*   Updated: 2026/06/06 16:58:33 by ntamacha         ###   ########.fr       */
+/*   Updated: 2026/06/08 21:46:37 by ntamacha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,7 +128,6 @@ void Server::handleCommand(int fd, IrcMessage& message)
 {
 }
 
-/* Send a message to a client */
 void Server::sendToClient(int fd, const std::string& message)
 {
     if (fd < 0 || message.empty())

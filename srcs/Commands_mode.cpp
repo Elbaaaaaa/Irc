@@ -22,6 +22,11 @@ void Server::MODE(int fd, IrcMessage& message)
         sendToClient(fd, ":server 461 " + client->getNick() + " MODE :Not enough parameters\r\n");
         return;
     }
+    if(message.params[1].size() < 2)
+    {
+        sendToClient(fd, ":server 461 " + client->getNick() + " MODE :Not enough parameters\r\n");
+        return;
+    }
     std::string channelName = message.params[0];
     char modeChar = message.params[1][1];
     char activeChar = message.params[1][0];
@@ -57,13 +62,14 @@ void Server::MODE(int fd, IrcMessage& message)
         break;
     
     default:
-        sendToClient(fd, ERR_UNKNOWNMODE(client->getNick(), channelName));
+        sendToClient(fd, ERR_UNKNOWNMODE(client->getNick(), std::string(1, activeChar)));
         return;
 }
 
     switch (modeChar)
 {
     case 'i':
+    {
         if (active == 1)
             channel->SetModei(true);
         else
@@ -71,8 +77,10 @@ void Server::MODE(int fd, IrcMessage& message)
         std::string modeMsg = ":" + client->getPrefix() + " MODE " + channelName + " " + message.params[1] + "\r\n";
         channel->broadcast(modeMsg);
         break ;
+    }
 
     case 't':
+    {
         if (active == 1)
             channel->SetModet(true);
         else
@@ -80,8 +88,10 @@ void Server::MODE(int fd, IrcMessage& message)
         std::string modeMsg = ":" + client->getPrefix() + " MODE " + channelName + " " + message.params[1] + "\r\n";
         channel->broadcast(modeMsg);
         break;
+    }
 
     case 'k': 
+    {
         if (key.empty())
         {
             sendToClient(fd, ERR_NEEDMOREPARAMS(client->getNick(), "MODE"));
@@ -94,8 +104,10 @@ void Server::MODE(int fd, IrcMessage& message)
         std::string modeMsg = ":" + client->getPrefix() + " MODE " + channelName + " " + message.params[1] + " " + key + "\r\n";
         channel->broadcast(modeMsg);
         break;
+    }
     
     case 'l':
+    {
         if (key.empty())
         {
             sendToClient(fd, ERR_NEEDMOREPARAMS(client->getNick(), "MODE"));
@@ -104,12 +116,14 @@ void Server::MODE(int fd, IrcMessage& message)
         if (active == 1)
             channel->SetModel(true, atoi(key.c_str()));
         else
-            channel->SetModel(false);
+            channel->SetModel(false, 0);
         std::string modeMsg = ":" + client->getPrefix() + " MODE " + channelName + " " + message.params[1] + " " + key + "\r\n";
         channel->broadcast(modeMsg);
         break;
+    }
     
     case 'o': 
+    {
         if (key.empty())
         {
             sendToClient(fd, ERR_NEEDMOREPARAMS(client->getNick(), "MODE"));
@@ -129,9 +143,10 @@ void Server::MODE(int fd, IrcMessage& message)
         std::string modeMsg = ":" + client->getPrefix() + " MODE " + channelName + " " + message.params[1] + " " + target->getNick() + "\r\n";
         channel->broadcast(modeMsg);
         break;
+    }
     
     default:
-        sendToClient(fd, ERR_UNKNOWNMODE(client->getNick(), std::string(1, modeChar)));
+        sendToClient(fd, ERR_UNKNOWNMODE(client->getNick(), std::string(1, activeChar)));
         return;
 
 }

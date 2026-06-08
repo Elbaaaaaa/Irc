@@ -150,7 +150,7 @@ std::string const& Channel::Getkey() const
     return(this->_key);
 }
 
-void broadcast(const std::string& msg, int except_fd)
+void Channel::broadcast(const std::string& msg, int except_fd)
 {
     std::map<int, Client*>::iterator it;
     for (it = _members.begin(); it != _members.end(); it++)
@@ -158,6 +158,6 @@ void broadcast(const std::string& msg, int except_fd)
         if (it->first == except_fd)
             continue ; 
         
-        sendToClient(it->first, msg);
+        send(it->first, msg.c_str(), msg.size(), 0);
     }
 }

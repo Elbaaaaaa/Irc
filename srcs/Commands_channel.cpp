@@ -32,7 +32,6 @@ void Server::JOIN(int fd, IrcMessage& message)
         sendToClient(fd, ":server 403 " + client->getNick() + " " + channelName + " :No such channel\r\n");
         return;
     }
-    channel->GetTopic()
     Channel* channel = getChannel(channelName);
     if (!channel)
     {
@@ -67,7 +66,6 @@ void Server::JOIN(int fd, IrcMessage& message)
 
     std::string joinMsg = ":" + client->getPrefix() + " JOIN " + channelName + "\r\n";
     channel->broadcast(joinMsg);
-
     if (!channel->GetTopic().empty())
     {
         sendToClient(fd, ":server 332 " + client->getNick() + " " + channelName + " :" + channel->GetTopic() + "\r\n");
@@ -215,6 +213,11 @@ void Server::TOPIC(int fd, IrcMessage& message)
     }
 
     Channel* channel = getChannel(channelName);
+    if (!channel)
+    {
+        sendToClient(fd, ":server 403 " + client->getNick() + " " + channelName + " :No such channel\r\n");
+        return;
+    }
 
     if (!channel->CheckMember(fd))
     {
