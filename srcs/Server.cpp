@@ -6,7 +6,7 @@
 /*   By: ntamacha <ntamacha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/11 21:19:52 by ebella            #+#    #+#             */
-/*   Updated: 2026/06/08 21:46:37 by ntamacha         ###   ########.fr       */
+/*   Updated: 2026/06/08 22:26:23 by ntamacha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,19 +105,34 @@ void Server::disconnectClient(int fd)
 
 void Server::createChannel(const std::string& name, Client& op)
 {
+    Channel* channel = new Channel(name, "");
+    channel->AddMember(op.getFd(), &op);
+    channel->AddOp(op.getFd(), &op);
+    _channels[name] = channel;
     
 }
 
 void Server::sendToClient(int fd, const std::string& message)
 {
-    Channel* channel = new Channel(name, "");
-    channel->AddMember(op.getFd(), &op);
-    channel->AddOp(op.getFd(), &op);
-    _channels[name] = channel;
+
 }
 
 void Server::removeClientFromAllChannels(Client& client)
 {
+    std::map<std::string, Channel*>::iterator it;
+    std::vector<std::string> supp;
+    for (it = _channels.begin(); it != _channels.end(); ++it)
+    {
+        Channel* channel = getChannel(it->first);
+        if (channel->CheckMember(client.getFd()))
+            channel->RemoveMember(client.getFd());
+        if (channel->GetMapMember().size() == 0)
+            supp.push_back(it->first);
+    }
+    for (std::vector<std::string>::iterator it2 = supp.begin(); it2 != supp.end(); ++it2)
+    {
+        removeChannel(*it2);
+    }
 }
 
 void Server::removeChannel(const std::string& name)
@@ -144,3 +159,29 @@ void Server::sendToClient(int fd, const std::string& message)
         total_sent += res;
     }
 }
+
+
+// run() — boucle principale du serveur. Elle appelle poll() en boucle, vérifie quels fds sont prêts, et appelle acceptNewClient() ou lit les données des clients existants.
+
+// acceptNewClient() — appelée quand le socket serveur est prêt. Elle fait accept() pour accepter la connexion, crée un nouveau Client, l'ajoute à _clients et _fds.
+
+// removeClient(int fd) — supprime un client de _clients et _fds, ferme son fd avec close().
+
+// writeToClient(int fd) — envoie les données en attente au client. Utile si tu gères un buffer d'envoi.
+
+// getClientByFd(int fd) — cherche dans _clients et retourne le Client* correspondant au fd, ou NULL si pas trouvé.
+
+// getChannel(const std::string& name) — cherche dans _channels et retourne le Channel* correspondant au nom, ou NULL si pas trouvé.
+
+// getClientByNick(const std::string& nick) — parcourt _clients et retourne le Client* dont le nick correspond, ou NULL si pas trouvé.
+
+// disconnectClient(int fd) — déconnecte proprement un client : le retire de tous les channels, puis appelle removeClient.
+
+
+// sendToClient(int fd, const std::string& message) — envoie une string à un client via send().
+
+// removeClientFromAllChannels(Client& client) — parcourt tous les channels dans _channels et appelle RemoveMember pour ce client sur chacun d'eux. Si un channel devient vide, le supprimer.
+
+// removeChannel(const std::string& name) — supprime le channel de _channels et libère la mémoire avec delete.
+
+// handleCommand(int fd, IrcMessage& message) — cherche la commande dans _commands et l'appelle. Si elle n'existe pas, envoie l'erreur 421 ERR_UNKNOWNCOMMAND.
