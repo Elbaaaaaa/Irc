@@ -6,7 +6,7 @@
 /*   By: ntamacha <ntamacha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/11 21:19:52 by ebella            #+#    #+#             */
-/*   Updated: 2026/06/08 22:26:23 by ntamacha         ###   ########.fr       */
+/*   Updated: 2026/06/09 11:18:06 by ntamacha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 {
     _running = true;
     initSocket();
+    initCommands();
 }
 
 Server::~Server()
@@ -161,6 +162,12 @@ void Server::sendToClient(int fd, const std::string& message)
 }
 
 
+void Server::initCommands()
+{
+
+}
+
+
 // run() — boucle principale du serveur. Elle appelle poll() en boucle, vérifie quels fds sont prêts, et appelle acceptNewClient() ou lit les données des clients existants.
 
 // acceptNewClient() — appelée quand le socket serveur est prêt. Elle fait accept() pour accepter la connexion, crée un nouveau Client, l'ajoute à _clients et _fds.
@@ -185,3 +192,14 @@ void Server::sendToClient(int fd, const std::string& message)
 // removeChannel(const std::string& name) — supprime le channel de _channels et libère la mémoire avec delete.
 
 // handleCommand(int fd, IrcMessage& message) — cherche la commande dans _commands et l'appelle. Si elle n'existe pas, envoie l'erreur 421 ERR_UNKNOWNCOMMAND.
+
+
+
+
+//initCommands() -- une boucle de ce type, une ligne par commande :
+// _commands["NOM"] = &Server::methode;
+// Les commandes à enregistrer d'après le plan de travail :
+
+// CAP, PASS, NICK, USER, QUIT
+// PING, PRIVMSG, NOTICE
+// JOIN, KICK, PART, INVITE, TOPIC, MODE
