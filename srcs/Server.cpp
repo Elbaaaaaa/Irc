@@ -288,7 +288,9 @@ void Server::sendToClient(int fd, const std::string& message)
     if (fd < 0 || message.empty())
         return;
 
-    std::string full_message = message + "\r\n";
+    std::string full_message = message;
+    if (full_message.size() < 2 || full_message.substr(full_message.size() - 2) != "\r\n")
+        full_message += "\r\n";
 
     size_t total_sent = 0;
     while (total_sent < full_message.length())
@@ -309,13 +311,6 @@ void Server::initCommands()
 	_commands["INVITE"] = &Server::INVITE;
 	_commands["TOPIC"] = &Server::TOPIC;
 	_commands["MODE"] = &Server::MODE;
-
-	void JOIN(int fd, IrcMessage& message);
-	void KICK(int fd, IrcMessage& message);
-	void PART(int fd, IrcMessage& message);
-	void INVITE(int fd, IrcMessage& message);
-	void TOPIC(int fd, IrcMessage& message);
-	void MODE(int fd, IrcMessage& message);
 }
 
 
