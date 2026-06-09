@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ntamacha <ntamacha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ebella <ebella@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/10 15:26:38 by ebella            #+#    #+#             */
-/*   Updated: 2026/06/07 19:29:57 by ntamacha         ###   ########.fr       */
+/*   Updated: 2026/06/09 11:33:43 by ebella           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,10 @@
 
 #include "Client.hpp"
 #include "Channel.hpp"
-#include "IrcReply.hpp"
+#include "ircreplies.hpp"
 #include "IrcMessage.hpp"
+#include "Parser.hpp"
+
 
 
 
@@ -45,13 +47,16 @@ class Server
         
         std::map<int, Client*> _clients;
         std::map<std::string, Channel*> _channels;
+        std::map<int, std::string> _clientPassword;
         std::map<std::string, void (Server::*)(int, IrcMessage&)> _commands;
 
         void initSocket();
         void acceptNewClient();
+        void initCommands();
         void removeClient(int fd);
         void writeToClient(int fd);
         void handleCommand(int fd, IrcMessage& message);
+        void readFromClient(int fd);
 
         void JOIN(int fd, IrcMessage& message);
         void KICK(int fd, IrcMessage& message);
