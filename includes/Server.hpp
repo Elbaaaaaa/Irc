@@ -54,6 +54,15 @@ class Server
         void TOPIC(int fd, IrcMessage& message);
         void MODE(int fd, IrcMessage& message);
 
+        void CAP(int fd, IrcMessage& message);
+        void PASS(int fd, IrcMessage& message);
+        void NICK(int fd, IrcMessage& message);
+        void USER(int fd, IrcMessage& message);
+        void QUIT(int fd, IrcMessage& message);
+        void PING(int fd, IrcMessage& message);
+        void PRIVMSG(int fd, IrcMessage& message);
+        void NOTICE(int fd, IrcMessage& message);
+
     public:
 
         Server(int port, std::string password);

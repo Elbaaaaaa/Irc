@@ -10,20 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-/*PASS, NICK, USER, QUIT, CAP
-
-Commands_connection.cpp
-
-CAP, PASS, NICK, USER, QUIT
-Attention : Client.hpp a _authenticated + _registered — il faudra les deux pour le welcome 001
-Pas de _password dans Client → tu devras le stocker temporairement, soit en ajoutant un champ dans Client, soit via une std::map<int, std::string> dans Server
-
-CAP — c'est juste vérifier le sous-commande (LS, REQ, END) et répondre en conséquence.
-CAP LS → répondre CAP * LS : (liste vide)
-CAP REQ → répondre CAP * NAK : (refus)
-CAP END → ne rien faire
-*/
-
+#include "../includes/Server.hpp"
 
 void Server::CAP(int fd, IrcMessage& message)
 {
@@ -78,10 +65,15 @@ void Server::PASS(int fd, IrcMessage& message)
 int isValidNick(const std::string& nick)
 {
     int i = 0;
-    if (nick[i] != '_' && !isalpha(nick))
+    std::string allowed = "-[]{}|\\";
+    if (nick[i] != '_' && !isalpha(nick[i]))
         return (0);
     for (i = 1; nick.size() > i; i++)
-    {}
+    {
+        if (allowed.find(nick[i]) == std::string::npos && !isalpha(nick[i]) && !isdigit(nick[i]))
+            return 0;
+    }
+    return 1;   
 
 }
 
@@ -97,17 +89,71 @@ void Server::NICK(int fd, IrcMessage& message)
     }
     std::string nick = message.params[0];
 
-
-    std::map<std::string, Client*>::iterator it;
-    for (it = _clients.begin(); it != _clients.end(); ++it)
+    if (!isValidNick(nick))
     {
-        Client* c = getClientByFd(it->first);
-        if (c->getNick() == nick)
-        {
-            sendToClient(fd, ERR_NICKNAMEINUSE(client->getNick(), fd));
-            return ;
-        }
+        sendToClient(fd, ERR_ERRONEUSNICKNAME(client->getNick(), fd));
+        return;
     }
+
+    Client* c = getClientByNick(nick);
+    if (c)
+    {
+        sendToClient(fd, ERR_NICKNAMEINUSE(client->getNick(), fd));
+        return ;
+    }
+
     client->setNick(nick);
+
+    if (!client->getUsername().empty() && !client->getHostname().empty() && _clientPassword[fd] == _password)
+    {
+        std::string welcome = ":server 001 " + client->getNick() + " :Welcome to the IRC server " + client->getPrefix();
+        sendToClient(fd, welcome);
+        client->setRegistered(true);
+    }
+}
+
+void Server::USER(int fd, IrcMessage& message)
+{
+    Client* client = getClientByFd(fd);
+    if (!client)
+        return;
+    if (client->isRegistered())
+    {
+        sendToClient (fd, ERR_ALREADYREGISTRED(client->getNick()));
+        return ;
+    }
+    if (message.params.size() < 4)
+    {
+        sendToClient(fd, ERR_NEEDMOREPARAMS(client->getNick(), "USER"));
+        return;
+    }
+    client->setUsername(message.params[0]);
+    client->setRealname(message.params[3]);
+    if (!client->getUsername().empty() && !client->getHostname().empty() && _clientPasswords[fd] == _password)
+    {
+        std::string welcome = ":server 001 " + client->getNick() + " :Welcome to the IRC server " + client->getPrefix();
+        sendToClient(fd, welcome);
+        client->setRegistered(true);
+    }
+
+}
+
+void Server::QUIT(int fd, IrcMessage& message)
+{
+    Client* client = getClientByFd(fd);
+    if (!client)
+        return;
+    std::string msg = (message.params.empty()) ? "leave" : message.params[0];
+
+    std::string quitMsg = ":" + client->getPrefix() + " QUIT :" + msg;
+    std::map<std::string, Channel*>::iterator it;
+    for (it = _channels.begin(); it != _channels.end(); ++it)
+    {
+        Channel* channel = getChannel(it->first);
+        if (channel->CheckMember(client->getFd()))
+            channel->broadcast(quitMsg);
+    }
+    removeClientFromAllChannels(*client);
+    disconnectClient(fd);
 }
 
