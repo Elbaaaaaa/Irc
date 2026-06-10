@@ -154,7 +154,6 @@ void Server::QUIT(int fd, IrcMessage& message)
         if (channel->CheckMember(client->getFd()))
             channel->broadcast(quitMsg);
     }
-    removeClientFromAllChannels(*client);
     disconnectClient(fd);
 }
 
