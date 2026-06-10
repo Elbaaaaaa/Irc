@@ -10,7 +10,6 @@
 /*                                                                            */
 /* ************************************************************************** */
 #include "../includes/Server.hpp"
-#include "../includes/Channel.hpp"
 
 void Server::JOIN(int fd, IrcMessage& message)
 {

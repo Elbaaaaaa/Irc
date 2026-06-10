@@ -10,6 +10,10 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <iostream>
+#include <cstdlib>
+#include "../includes/Server.hpp"
+
 int main(int ac, char **av)
 {
     if (ac != 3)
