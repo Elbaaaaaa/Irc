@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ebella <ebella@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ntamacha <ntamacha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/11 21:19:52 by ebella            #+#    #+#             */
-/*   Updated: 2026/06/09 11:31:13 by ebella           ###   ########.fr       */
+/*   Updated: 2026/06/10 10:28:49 by ntamacha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -268,12 +268,22 @@ void Server::removeChannel(const std::string& name)
 
 void Server::handleCommand(int fd, IrcMessage& message)
 {
-	std::map<std::string, void(Server::*)(int, IrcMessage&)>::iterator it = _commands.find(message.command);
+	std::map<std::string, void(Server::*)(int, IrcMessage&)>::iterator it;
+	
+	Client *client = getClientByFd(fd);
+	if (!client)
+		return;
+	
+	for (int i = 0; message.command.size() > i; i++)
+    	message.command[i] = toupper(message.command[i]);
+	if (!client->isRegistered() && message.command != "CAP" && message.command != "NICK" && message.command != "USER" && message.command != "PASS")
+	{
+		sendToClient(fd, ERR_NOTREGISTERED(client->getNick()));
+		return;
+	}
+	it = _commands.find(message.command);
 	if (it == _commands.end())
 	{
-		Client *client = getClientByFd(fd);
-		if (!client)
-			return;
 		std::string nick = client->getNick();
 		if (nick.empty())
 			return;
@@ -311,35 +321,13 @@ void Server::initCommands()
 	_commands["INVITE"] = &Server::INVITE;
 	_commands["TOPIC"] = &Server::TOPIC;
 	_commands["MODE"] = &Server::MODE;
+	_commands["CAP"]     = &Server::CAP;
+	_commands["PASS"]    = &Server::PASS;
+	_commands["NICK"]    = &Server::NICK;
+	_commands["USER"]    = &Server::USER;
+	_commands["QUIT"]    = &Server::QUIT;
+	_commands["PING"]    = &Server::PING;
+	_commands["PRIVMSG"] = &Server::PRIVMSG;
+	_commands["NOTICE"]  = &Server::NOTICE;
 }
 
-
-// writeToClient(int fd) — envoie les données en attente au client. Utile si tu gères un buffer d'envoi.
-
-// getClientByFd(int fd) — cherche dans _clients et retourne le Client* correspondant au fd, ou NULL si pas trouvé.
-
-// getChannel(const std::string& name) — cherche dans _channels et retourne le Channel* correspondant au nom, ou NULL si pas trouvé.
-
-// getClientByNick(const std::string& nick) — parcourt _clients et retourne le Client* dont le nick correspond, ou NULL si pas trouvé.
-
-// disconnectClient(int fd) — déconnecte proprement un client : le retire de tous les channels, puis appelle removeClient.
-
-
-// sendToClient(int fd, const std::string& message) — envoie une string à un client via send().
-
-// removeClientFromAllChannels(Client& client) — parcourt tous les channels dans _channels et appelle RemoveMember pour ce client sur chacun d'eux. Si un channel devient vide, le supprimer.
-
-// removeChannel(const std::string& name) — supprime le channel de _channels et libère la mémoire avec delete.
-
-// handleCommand(int fd, IrcMessage& message) — cherche la commande dans _commands et l'appelle. Si elle n'existe pas, envoie l'erreur 421 ERR_UNKNOWNCOMMAND.
-
-
-
-
-//initCommands() -- une boucle de ce type, une ligne par commande :
-// _commands["NOM"] = &Server::methode;
-// Les commandes à enregistrer d'après le plan de travail :
-
-// CAP, PASS, NICK, USER, QUIT
-// PING, PRIVMSG, NOTICE
-// JOIN, KICK, PART, INVITE, TOPIC, MODE
