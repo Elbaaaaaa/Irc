@@ -6,7 +6,7 @@
 /*   By: ntamacha <ntamacha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/11 21:19:52 by ebella            #+#    #+#             */
-/*   Updated: 2026/06/10 10:28:49 by ntamacha         ###   ########.fr       */
+/*   Updated: 2026/06/10 15:11:27 by ntamacha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 
 Server::Server(int port, std::string password) : _port(port), _socket(-1), _running(true), _password(password)
 {
@@ -100,7 +101,7 @@ void Server::initSocket()
 
 void Server::run()
 {
-	while (_running)
+	while (g_running)
 	{
 		int ret = poll(&_fds[0], _fds.size(), -1);
 		if (ret < 0)
@@ -154,6 +155,8 @@ void Server::readFromClient(int fd)
 			IrcMessage msg = Parser::parseMessage(line);
 			if (!msg.command.empty())
 				handleCommand(fd, msg);
+			if (!getClientByFd(fd))
+    			return;
 		}
 	}
 }

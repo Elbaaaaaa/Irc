@@ -82,4 +82,7 @@ class Server
         void removeChannel(const std::string& name);
 };
 
+
+extern bool g_running;
+
 #endif

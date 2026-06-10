@@ -37,7 +37,7 @@ void Server::PRIVMSG(int fd, IrcMessage& message)
 
     std::string target = message.params[0];
     std::string msg = message.params[1];
-    std::string privmsg = ":" + client->getPrefix() + " PRIVMSG " + target + " :" + msg ;
+    std::string privmsg = ":" + client->getPrefix() + " PRIVMSG " + target + " :" + msg + "\r\n";
 
     if (message.params[0][0] != '#')
     {
@@ -78,7 +78,7 @@ void Server::NOTICE(int fd, IrcMessage& message)
 
     std::string target = message.params[0];
     std::string msg = message.params[1];
-    std::string privmsg = ":" + client->getPrefix() + " NOTICE " + target + " :" + msg ;
+    std::string privmsg = ":" + client->getPrefix() + " NOTICE " + target + " :" + msg + "\r\n" ;
 
     if (message.params[0][0] != '#')
     {

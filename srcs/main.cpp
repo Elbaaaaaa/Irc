@@ -13,6 +13,15 @@
 #include <iostream>
 #include <cstdlib>
 #include "../includes/Server.hpp"
+#include <csignal>
+
+bool g_running = true;
+
+void signalHandler(int sig)
+{
+    (void)sig;
+    g_running = false;
+}
 
 int main(int ac, char **av)
 {
@@ -38,6 +47,7 @@ int main(int ac, char **av)
 
     try { 
         Server server(port, pwd);
+        signal(SIGINT, signalHandler);
         server.run();
     }
     catch(std::exception& e) 

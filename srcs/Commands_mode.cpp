@@ -93,13 +93,15 @@ void Server::MODE(int fd, IrcMessage& message)
 
     case 'k': 
     {
-        if (key.empty())
-        {
-            sendToClient(fd, ERR_NEEDMOREPARAMS(client->getNick(), "MODE"));
-            return;
-        }
         if (active == 1)
+        {
+            if (key.empty())
+            {
+                sendToClient(fd, ERR_NEEDMOREPARAMS(client->getNick(), "MODE"));
+                return;
+            }
             channel->SetModek(true, key);
+        }
         else
             channel->SetModek(false);
         std::string modeMsg = ":" + client->getPrefix() + " MODE " + channelName + " " + message.params[1] + " " + key + "\r\n";
@@ -109,13 +111,15 @@ void Server::MODE(int fd, IrcMessage& message)
     
     case 'l':
     {
-        if (key.empty())
-        {
-            sendToClient(fd, ERR_NEEDMOREPARAMS(client->getNick(), "MODE"));
-            return;
-        }
         if (active == 1)
+        {
+            if (key.empty())
+            {
+                sendToClient(fd, ERR_NEEDMOREPARAMS(client->getNick(), "MODE"));
+                return;
+            }
             channel->SetModel(true, atoi(key.c_str()));
+        }
         else
             channel->SetModel(false, 0);
         std::string modeMsg = ":" + client->getPrefix() + " MODE " + channelName + " " + message.params[1] + " " + key + "\r\n";
