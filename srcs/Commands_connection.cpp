@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../includes/Server.hpp"
+#include <cstddef>
 
 void Server::CAP(int fd, IrcMessage& message)
 {
@@ -64,11 +65,11 @@ void Server::PASS(int fd, IrcMessage& message)
 
 int isValidNick(const std::string& nick)
 {
-    int i = 0;
+    size_t i = 0;
     std::string allowed = "-[]{}|\\";
     if (nick[i] != '_' && !isalpha(nick[i]))
         return (0);
-    for (i = 1; nick.size() > i; i++)
+    for (i = 1; i < nick.size(); i++)
     {
         if (allowed.find(nick[i]) == std::string::npos && !isalpha(nick[i]) && !isdigit(nick[i]))
             return 0;
@@ -91,14 +92,14 @@ void Server::NICK(int fd, IrcMessage& message)
 
     if (!isValidNick(nick))
     {
-        sendToClient(fd, ERR_ERRONEUSNICKNAME(client->getNick(), fd));
+        sendToClient(fd, ERR_ERRONEUSNICKNAME(client->getNick(), nick));
         return;
     }
 
     Client* c = getClientByNick(nick);
     if (c)
     {
-        sendToClient(fd, ERR_NICKNAMEINUSE(client->getNick(), fd));
+        sendToClient(fd, ERR_NICKNAMEINUSE(client->getNick(), nick));
         return ;
     }
 
@@ -129,7 +130,7 @@ void Server::USER(int fd, IrcMessage& message)
     }
     client->setUsername(message.params[0]);
     client->setRealname(message.params[3]);
-    if (!client->getUsername().empty() && !client->getHostname().empty() && _clientPasswords[fd] == _password)
+    if (!client->getUsername().empty() && !client->getHostname().empty() && _clientPassword[fd] == _password)
     {
         std::string welcome = ":server 001 " + client->getNick() + " :Welcome to the IRC server " + client->getPrefix();
         sendToClient(fd, welcome);

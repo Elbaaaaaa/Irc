@@ -14,6 +14,7 @@
 #include <cerrno>
 #include <cstddef>
 #include <cstdio>
+#include <cstring>
 #include <iterator>
 #include <map>
 #include <netinet/in.h>
@@ -29,7 +30,7 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 {
     _running = true;
     initSocket();
-    //initCommands();
+    initCommands();
 }
 
 Server::~Server()
@@ -147,7 +148,8 @@ void Server::readFromClient(int fd)
 
 void Server::acceptNewClient()
 {
-	struct sockaddr_in sin = {0};
+	struct sockaddr_in sin;
+	memset(&sin, 0, sizeof(sin));
 	socklen_t len = sizeof(sin);
 
 	int client_fd = accept(_socket, (struct sockaddr *)&sin, &len);
@@ -274,7 +276,7 @@ void Server::handleCommand(int fd, IrcMessage& message)
 	if (!client)
 		return;
 	
-	for (int i = 0; message.command.size() > i; i++)
+	for (size_t i = 0; message.command.size() > i; i++)
     	message.command[i] = toupper(message.command[i]);
 	if (!client->isRegistered() && message.command != "CAP" && message.command != "NICK" && message.command != "USER" && message.command != "PASS")
 	{

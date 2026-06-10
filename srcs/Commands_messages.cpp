@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-PING, PONG, PRIVMSG, NOTICE
+#include "../includes/Server.hpp"
 
 void Server::PING(int fd, IrcMessage& message)
 {

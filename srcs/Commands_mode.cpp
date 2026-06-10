@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 #include "../includes/Server.hpp"
 #include "../includes/Channel.hpp"
+#include <cstdlib>
 
 void Server::MODE(int fd, IrcMessage& message)
 {

@@ -6,6 +6,7 @@
 #include <map>
 #include <poll.h>
 #include <string>
+#include <cstring>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
