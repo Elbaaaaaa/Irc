@@ -4,7 +4,7 @@ CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 CPPFLAGS = -Iincludes
 
-SRCS = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp srcs/Channel.cpp srcs/Parser.cpp srcs/Dispatcher.cpp \
+SRCS = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp srcs/Channel.cpp srcs/Parser.cpp \
 	srcs/Commands_connection.cpp srcs/Commands_messages.cpp srcs/Commands_channel.cpp srcs/Commands_mode.cpp
 
 OBJS = $(SRCS:.cpp=.o)

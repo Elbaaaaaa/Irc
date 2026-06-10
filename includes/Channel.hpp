@@ -15,6 +15,7 @@
 #include "Client.hpp"
 #include <string>
 #include <map>
+#include <sys/socket.h>
 
 class Channel
 {
@@ -28,10 +29,10 @@ private :
     std::map<int, Client*> _invited;
     bool _i;
     bool _t;
-    bool _k;
-    std::string _key;
     bool _l;
     int _limitValue;
+    bool _k;
+    std::string _key;
 
 
 public :

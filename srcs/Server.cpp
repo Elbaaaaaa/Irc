@@ -12,28 +12,41 @@
 
 #include "../includes/Server.hpp"
 #include <cerrno>
+#include <csignal>
 #include <cstddef>
 #include <cstdio>
-#include <iterator>
+#include <cstring>
 #include <map>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <new>
 #include <stdexcept>
 #include <string>
 #include <sys/poll.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-Server::Server(int port, std::string password) : _port(port), _password(password)
+Server::Server(int port, std::string password) : _port(port), _socket(-1), _running(true), _password(password)
 {
-    _running = true;
+    signal(SIGPIPE, SIG_IGN);
     initSocket();
-    //initCommands();
+    initCommands();
 }
 
 Server::~Server()
 {
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		delete it->second;
+	_clients.clear();
+
+	for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+		delete it->second;
+	_channels.clear();
+
+	if (_socket >= 0)
+		close(_socket);
 }
 
 /* Initialize the socket */
@@ -147,7 +160,8 @@ void Server::readFromClient(int fd)
 
 void Server::acceptNewClient()
 {
-	struct sockaddr_in sin = {0};
+	struct sockaddr_in sin;
+	memset(&sin, 0, sizeof(sin));
 	socklen_t len = sizeof(sin);
 
 	int client_fd = accept(_socket, (struct sockaddr *)&sin, &len);
@@ -162,6 +176,7 @@ void Server::acceptNewClient()
 		return;
     }
 	Client* client = new Client(client_fd);
+	client->setHostname(inet_ntoa(sin.sin_addr));
 
 	_clients[client_fd] = client;
 
@@ -183,6 +198,7 @@ void Server::removeClient(int fd)
 	close(fd);
 	delete client;
 	_clients.erase(fd);
+	_clientPassword.erase(fd);
 	
 	for(std::vector<pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
 	{
@@ -274,7 +290,7 @@ void Server::handleCommand(int fd, IrcMessage& message)
 	if (!client)
 		return;
 	
-	for (int i = 0; message.command.size() > i; i++)
+	for (size_t i = 0; message.command.size() > i; i++)
     	message.command[i] = toupper(message.command[i]);
 	if (!client->isRegistered() && message.command != "CAP" && message.command != "NICK" && message.command != "USER" && message.command != "PASS")
 	{
